@@ -2,7 +2,10 @@ package com.example.localization
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
@@ -98,13 +101,8 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,1000L).apply {
-            this.setGranularity(Granularity.GRANULARITY_FINE)
-            // this.setMinUpdateDistanceMeters(5F)
-            //  this.setMinUpdateDistanceMeters(5F)
-            //this.setMinUpdateIntervalMillis(4000)
-            this.setMinUpdateIntervalMillis(1000)
-        }.build()
+            Priority.PRIORITY_HIGH_ACCURACY,3000L).apply {
+            this.setGranularity(Granularity.GRANULARITY_FINE)}.build()
 
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
@@ -144,10 +142,17 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     }
 
     private fun createForegroundInfo(): ForegroundInfo {
+        val resultIntent = Intent(context, MainActivity::class.java)
+        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(resultIntent)
+            getPendingIntent(0,
+                 PendingIntent.FLAG_IMMUTABLE)
+        }
         val builder: NotificationCompat.Builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Você está online") // .setContentTitle("Mobbi Express")
             .setTicker("Mobbi Express")
+                .setContentIntent(resultPendingIntent)
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
