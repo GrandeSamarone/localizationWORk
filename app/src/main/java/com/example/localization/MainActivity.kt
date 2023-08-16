@@ -5,10 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.work.Constraints
@@ -67,8 +69,9 @@ class MainActivity : AppCompatActivity() {
             "motoboyON",
             ExistingWorkPolicy.REPLACE,
             locationRequest)
-     }
 
+       
+     }
     private fun requestForegroundPermissions() {
         val provideRationale = foregroundPermissionApproved()
 
@@ -76,7 +79,12 @@ class MainActivity : AppCompatActivity() {
         // additional rationale.
         if (provideRationale) {
             Log.d(TAG, "PERMISSION OK")
-            startJob()
+            if(checkLocation()){
+                 startJob()
+            }else{
+                Log.d(TAG, "active GPS")
+            }
+
 
            // LocationUpdates(applicationContext).start()
         } else {
@@ -84,13 +92,21 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                 this@MainActivity,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.FOREGROUND_SERVICE,Manifest.permission.ACCESS_COARSE_LOCATION,),
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
                 REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
             )
 
         }
     }
+    private fun checkLocation():Boolean{
+        val manager = this@MainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+           return false
+        }
 
+        return true
+    }
     // TODO: Step 1.0, Review Permissions: Handles permission result.
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -137,7 +153,7 @@ class MainActivity : AppCompatActivity() {
             )
             serviceChannel.description = "This is channel 1";
             val notificationManager =
-                applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as
+                this@MainActivity.getSystemService(Context.NOTIFICATION_SERVICE) as
                         NotificationManager
             notificationManager.createNotificationChannel(serviceChannel)
         }
