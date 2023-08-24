@@ -25,14 +25,18 @@ import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import androidx.work.impl.utils.futures.SettableFuture
+import androidx.work.workDataOf
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.material.snackbar.Snackbar
 import com.google.common.util.concurrent.ListenableFuture
+import java.io.IOException
 import java.util.Locale
+import java.util.concurrent.CancellationException
 
 
 class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
@@ -51,32 +55,48 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     private   var fusedLocationProviderClient= LocationServices.getFusedLocationProviderClient(context)
 
     override fun onStopped() {
-        Log.e(TAG, "onStopped()")
+        Log.d(TAG, "onStopped()")
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
 
+
     override fun startWork(): ListenableFuture<Result> {
-        Log.i(TAG, "startWork")
+        Log.d(TAG, "startWork")
         return CallbackToFutureAdapter.getFuture { completer ->
-            Log.i(TAG, "CallbackToFutureAdapter")
+            Log.d(TAG, "CallbackToFutureAdapter")
+
             try{
                 if(foregroundPermissionApproved()){
-                    setForegroundAsync(createForegroundInfo())
+                   // setForegroundAsync(createForegroundInfo())
                     checkLocation()
                 }else{
-                    completer.set(Result.failure())
+                    completer.set(Result.failure( workDataOf(
+                        "error" to "error do caralho"
+                    )))
                 }
-            }catch (e:Exception){
-                Log.i(TAG, "Exception $e")
-                completer.set(Result.failure())
+            } catch (ioError: IOException) {
+                onStopped()
+                 completer.set(Result.failure( workDataOf(
+                    "error" to ioError.localizedMessage
+                )))
+            } catch (otherError: Exception) {
+                onStopped()
+                Log.d(TAG, otherError.toString()+"1")
+                completer.setCancelled()
+                completer.setException(otherError)
+            }catch (otherError: CancellationException) {
+                onStopped()
+                Log.d(TAG, otherError.toString()+"vai")
+                completer.setCancelled()
+                completer.setException(otherError)
             }
         }
     }
     private fun checkLocation(){
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Log.i(TAG, "ENABLE GPS")
+            Log.d(TAG, "ENABLE GPS")
         }
         getLocationUpdates()
     }
@@ -90,7 +110,7 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
-                    Log.i(TAG, "LatitudeCallback ${location.latitude} + ${location.longitude}")
+                 //   Log.i(TAG, "LatitudeCallback ${location.latitude} + ${location.longitude}")
                     progress="OBSERVER ${location.latitude} + ${location.longitude}"
                     Toast.makeText(context, "OBSERVER ${location.latitude} + ${location.longitude}", Toast.LENGTH_SHORT).show()
                 }
@@ -100,11 +120,18 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
+
+
+        val onSuccess = { locationResult: LocationResult ->
+            // Process location result here
+         //   completer.set(Result.success())
+        }
         val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,3000L).apply {
+            Priority.PRIORITY_HIGH_ACCURACY,8000L).apply {
             this.setGranularity(Granularity.GRANULARITY_FINE)}.build()
 
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        fusedLocationProviderClient.requestLocationUpdates(
+            locationRequest, locationCallback, Looper.getMainLooper())
     }
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun parseLocationWithGeocoder(location: Location) {
@@ -142,17 +169,17 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     }
 
     private fun createForegroundInfo(): ForegroundInfo {
-        val resultIntent = Intent(context, MainActivity::class.java)
-        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
-            addNextIntentWithParentStack(resultIntent)
-            getPendingIntent(0,
-                 PendingIntent.FLAG_IMMUTABLE)
-        }
+//        val resultIntent = Intent(context, MainActivity::class.java)
+//        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
+//            addNextIntentWithParentStack(resultIntent)
+//            getPendingIntent(0,
+//                 PendingIntent.FLAG_IMMUTABLE)
+//        }
         val builder: NotificationCompat.Builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Você está online") // .setContentTitle("Mobbi Express")
             .setTicker("Mobbi Express")
-                .setContentIntent(resultPendingIntent)
+          //      .setContentIntent(resultPendingIntent)
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
