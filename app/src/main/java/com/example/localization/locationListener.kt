@@ -26,6 +26,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import androidx.work.impl.utils.futures.SettableFuture
 import androidx.work.workDataOf
+import com.example.localization.bubbleWork.BubbleWork
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -50,7 +51,7 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
         const val CHANNEL_ID = "mobbiexpresswork"
         var progress = "progress"
     }
-
+    private var bublle: BubbleWork = BubbleWork()
     private lateinit  var locationCallback: LocationCallback
     private   var fusedLocationProviderClient= LocationServices.getFusedLocationProviderClient(context)
 
@@ -69,7 +70,8 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
             try{
                 if(foregroundPermissionApproved()){
                    // setForegroundAsync(createForegroundInfo())
-                    checkLocation()
+                    getLocationUpdates()
+                    bublle.Start(context)
                 }else{
                     completer.set(Result.failure( workDataOf(
                         "error" to "error do caralho"
@@ -93,13 +95,7 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
             }
         }
     }
-    private fun checkLocation(){
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Log.d(TAG, "ENABLE GPS")
-        }
-        getLocationUpdates()
-    }
+
     private fun getLocationUpdates() {
         setLocationCallback()
         startLocationUpdates()
@@ -121,15 +117,9 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
 
-
-        val onSuccess = { locationResult: LocationResult ->
-            // Process location result here
-         //   completer.set(Result.success())
-        }
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,8000L).apply {
             this.setGranularity(Granularity.GRANULARITY_FINE)}.build()
-
         fusedLocationProviderClient.requestLocationUpdates(
             locationRequest, locationCallback, Looper.getMainLooper())
     }

@@ -1,16 +1,22 @@
 package com.example.localization
 
 import android.Manifest
+import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
@@ -22,8 +28,8 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.example.localization.bubbleWork.BubbleWork
 import com.example.localization.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "MYTAG"
@@ -36,14 +42,50 @@ class MainActivity : AppCompatActivity() {
     }
     lateinit var workManager: WorkManager
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    private val requestMultiplePermissions = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        permissions.entries.forEach {
+            Log.e("DEBUG", "${it.key} = ${it.value}")
+
+            if (it.value) {
+                if (checkLocation()) {
+                    startJob()
+
+                } else {
+                    val intent1 = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    startForResult.launch(intent1)
+                    Log.d(TAG, "active GPS")
+                }
+            }
+        }
+    }
+
+    ///ir para confirugação do GPS
+    private val startForResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         createChannel()
         workManager = WorkManager.getInstance(this)
+
         binding.btLoc.setOnClickListener {
-            requestForegroundPermissions()
+
+            if (!Settings.canDrawOverlays(this)) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startForResult.launch(intent)
+            } else {
+                requestMultiplePermissions.launch(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+                )
+            }
+
         }
 
         binding.btLocClosed.setOnClickListener {
@@ -62,7 +104,6 @@ class MainActivity : AppCompatActivity() {
                 OneTimeWorkRequest.Builder(WorkServiceOnline::class.java)
                     .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                     .setConstraints(constraints)
-                    .setInitialDelay(1, TimeUnit.SECONDS)
                     .setBackoffCriteria(
                         BackoffPolicy.LINEAR,
                         10,
@@ -120,35 +161,6 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    private fun requestForegroundPermissions() {
-        val provideRationale = foregroundPermissionApproved()
-
-        // If the user denied a previous request, but didn't check "Don't ask again", provide
-        // additional rationale.
-        if (provideRationale) {
-            Log.d(TAG, "PERMISSION OK")
-            if (checkLocation()) {
-                startJob()
-            } else {
-                Log.d(TAG, "active GPS")
-            }
-
-
-            // LocationUpdates(applicationContext).start()
-        } else {
-            Log.d(TAG, "Request foreground only permission")
-            ActivityCompat.requestPermissions(
-                this@MainActivity,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                ),
-                REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
-            )
-
-        }
-    }
-
     private fun checkLocation(): Boolean {
         val manager =
             this@MainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -187,14 +199,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun foregroundPermissionApproved(): Boolean {
-        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    }
-
-
     private fun createChannel() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -210,4 +214,5 @@ class MainActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(serviceChannel)
         }
     }
+
 }
