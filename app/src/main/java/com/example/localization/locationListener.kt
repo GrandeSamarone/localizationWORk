@@ -160,16 +160,18 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
 
     private fun createForegroundInfo(): ForegroundInfo {
 //        val resultIntent = Intent(context, MainActivity::class.java)
+//        //resultIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//        resultIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+//        resultIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 //        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
 //            addNextIntentWithParentStack(resultIntent)
-//            getPendingIntent(0,
-//                 PendingIntent.FLAG_IMMUTABLE)
+//            getPendingIntent(0, PendingIntent.FLAG_MUTABLE)
 //        }
         val builder: NotificationCompat.Builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Você está online") // .setContentTitle("Mobbi Express")
+            .setContentTitle("Você está online")
             .setTicker("Mobbi Express")
-          //      .setContentIntent(resultPendingIntent)
+              //  .setContentIntent(resultPendingIntent)
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

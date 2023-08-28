@@ -1,6 +1,7 @@
 package com.example.localization.bubbleWork
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.view.Gravity
@@ -8,9 +9,9 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat.startActivity
+import com.example.localization.MainActivity
 import com.example.localization.R
-import com.example.localization.databinding.ActivityMainBinding
 
 class BubbleWork {
     private lateinit var windowManager: WindowManager
@@ -38,10 +39,9 @@ class BubbleWork {
         val singleClick: Boolean = diffPosicaoX < 5 && diffPosicaoY < 5
 
         if (singleClick) {
-          //  val intent = Intent(this@FloatingBubbleService, MainActivity::class.java)
-          //  intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-          //  startActivity(intent)
-          //  stopSelf()
+            val intent = Intent(context, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
         }
         return true
     }
@@ -111,5 +111,7 @@ class BubbleWork {
             }
         }
     }
+
+
 
 }

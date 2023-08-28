@@ -1,7 +1,6 @@
 package com.example.localization
 
 import android.Manifest
-import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -10,15 +9,12 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -28,9 +24,10 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.example.localization.bubbleWork.BubbleWork
 import com.example.localization.databinding.ActivityMainBinding
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+
 
 private const val TAG = "MYTAG"
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
@@ -111,55 +108,38 @@ class MainActivity : AppCompatActivity() {
                     )
                     .build()
 
-            Log.d(TAG, locationRequest.toString())
-            Log.d(TAG, locationRequest.workSpec.backoffDelayDuration.toString())
+            Log.d(TAG, "MSG MSG")
+            Log.d(TAG, locationRequest.id.toString())
 
 
             workManager.enqueueUniqueWork(
                 "motoboyON",
                 ExistingWorkPolicy.REPLACE,
-                locationRequest
-            )
+                locationRequest)
 
-            observeProgress(locationRequest)
+
+          observeWork(locationRequest)
+
         } catch (e: Exception) {
             Log.i(TAG, e.toString())
-            binding.textobs.text = e.toString()
+           // binding.textobs.text = e.toString()
         }
 
 
     }
 
-
-    private fun observeProgress(oneTimeWorkRequest: OneTimeWorkRequest) {
-        WorkManager.getInstance(this)
-            .getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
-            .observe(this, Observer<WorkInfo> {
-                it?.let { workInfo ->
-                    when (workInfo.state) {
-                        WorkInfo.State.ENQUEUED ->
-                            Log.d(TAG, "Worker ENQUEUED")
-
-                        WorkInfo.State.RUNNING ->
-                            Log.d(TAG, "Worker RUNNING")
-
-                        WorkInfo.State.SUCCEEDED ->
-                            Log.d(TAG, "Worker SUCCEEDED")
-
-                        WorkInfo.State.FAILED ->
-                            workManager.cancelAllWork()
-
-                        WorkInfo.State.BLOCKED ->
-                            Log.d(TAG, "Worker BLOCKED")
-
-                        WorkInfo.State.CANCELLED ->
-                            Log.d(TAG, "Worker CANCELLED")
-                    }
+    private fun observeWork(oneTimeWorkRequest: OneTimeWorkRequest) {
+        WorkManager.getInstance(this).getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
+            .observe(this) { workInfo ->
+                if (workInfo != null) {
+                    Log.i(TAG, "${workInfo.state}")
+                    binding.textobs.text = workInfo.state.toString()
+                    binding.texterror.text = workInfo.outputData.getString("error")
                 }
-                binding.textobs.text = it.state.toString()
-                binding.texterror.text = it.outputData.getString("error")
-            })
+            }
     }
+
+
 
     private fun checkLocation(): Boolean {
         val manager =
