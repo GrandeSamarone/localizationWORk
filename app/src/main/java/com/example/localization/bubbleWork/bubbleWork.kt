@@ -8,19 +8,25 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.core.content.ContextCompat.startActivity
+import androidx.core.view.isVisible
 import com.example.localization.MainActivity
 import com.example.localization.R
 
 class BubbleWork {
     private lateinit var windowManager: WindowManager
     private lateinit var floatingBubble: View
+    private lateinit var floatingClosed: View
     private var initialX: Int = 0
     private var initialY: Int = 0
     private var initialTouchX: Float = 0.toFloat()
     private var initialTouchY: Float = 0.toFloat()
     private lateinit var params : WindowManager.LayoutParams
+    private lateinit var paramsClosed : WindowManager.LayoutParams
     private lateinit var inflater:LayoutInflater
     private lateinit var context: Context
 
@@ -62,12 +68,21 @@ class BubbleWork {
         return true
     }
 
-
+    @Suppress("InflateParams")
     private fun loadFloatingBubble(inflater: LayoutInflater){
-        floatingBubble = inflater.inflate(R.layout.bubble_widget_layout, null)
+
+        floatingBubble = inflater.inflate(R.layout.bubble_widget_layout,null)
+        floatingClosed = inflater.inflate(R.layout.bubble_widget_closed,null)
 
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
             params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT
+            )
+            paramsClosed = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -80,22 +95,29 @@ class BubbleWork {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT
-            )
+                PixelFormat.TRANSLUCENT)
+            paramsClosed = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT)
         }
-        //Specify the view position
-        params.gravity = Gravity.NO_GRAVITY
+        params.gravity =Gravity.TOP or Gravity.START
+        paramsClosed.gravity =Gravity.BOTTOM or Gravity.BOTTOM
         params.x = 0
-        params.y = 50
+        paramsClosed.x = 0
+        params.y = 100
+        paramsClosed.y = 100
 
-        //Add the view to the window
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         windowManager.addView(floatingBubble, params)
+        windowManager.addView(floatingClosed, paramsClosed)
 
-//        val closeButtonCollapsed = floatingBubble.close_btn
-//        closeButtonCollapsed.setOnClickListener {
-//            stopSelf()
-//        }
+        val closeButtonCollapsed = floatingBubble.findViewById<ImageView>(R.id.close_btn)
+        closeButtonCollapsed.setOnClickListener {
+            if (floatingBubble.isVisible) windowManager.removeView(floatingBubble)
+        }
 
         val bubbleView: View = floatingBubble.findViewById(R.id.bolha_layout)
         bubbleView.setOnTouchListener { view, event ->

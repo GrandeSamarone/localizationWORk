@@ -69,7 +69,6 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
 
             try{
                 if(foregroundPermissionApproved()){
-                   // setForegroundAsync(createForegroundInfo())
                     getLocationUpdates()
                     bublle.Start(context)
                 }else{

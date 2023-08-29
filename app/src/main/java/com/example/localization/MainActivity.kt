@@ -124,8 +124,6 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, e.toString())
            // binding.textobs.text = e.toString()
         }
-
-
     }
 
     private fun observeWork(oneTimeWorkRequest: OneTimeWorkRequest) {
