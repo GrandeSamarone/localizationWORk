@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<RelativeLayout
 xmlns:android="http://schemas.android.com/apk/res/android"
 xmlns:tools="http://schemas.android.com/tools"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
-android:id="@+id/frameBubble">
-    <RelativeLayout
-        android:id="@+id/bolha_layout"
-        android:layout_width="wrap_content"
-        android:visibility="visible"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
+android:id="@+id/bolha_layout">
         <ImageView
             android:id="@+id/bolha_img"
             android:layout_width="60dp"
@@ -19,14 +12,4 @@ android:id="@+id/frameBubble">
             android:layout_marginTop="8dp"
             android:src="@drawable/icone_botao_flutuante"
             tools:ignore="ContentDescription"/>
-
-        <ImageView
-            android:id="@+id/close_btn"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginLeft="40dp"
-            android:src="@drawable/ic_close"
-            tools:ignore="ContentDescription"/>
-
-    </RelativeLayout>
-</FrameLayout>
+</RelativeLayout>
