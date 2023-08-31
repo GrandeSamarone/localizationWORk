@@ -131,6 +131,9 @@ class MainActivity : AppCompatActivity() {
             .observe(this) { workInfo ->
                 if (workInfo != null) {
                     Log.i(TAG, "${workInfo.state}")
+                    if(workInfo.state==WorkInfo.State.FAILED){
+                        workManager.cancelUniqueWork("motoboyON")
+                    }
                     binding.textobs.text = workInfo.state.toString()
                     binding.texterror.text = workInfo.outputData.getString("error")
                 }

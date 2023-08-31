@@ -2,17 +2,13 @@ package com.example.localization
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
 import android.os.Build
 import android.os.Looper
 import android.util.Log
@@ -33,7 +29,6 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.material.snackbar.Snackbar
 import com.google.common.util.concurrent.ListenableFuture
 import java.io.IOException
 import java.util.Locale
@@ -58,9 +53,8 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     override fun onStopped() {
         Log.d(TAG, "onStopped()")
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        bublle.Start(context,false)
     }
-
-
 
     override fun startWork(): ListenableFuture<Result> {
         Log.d(TAG, "startWork")
@@ -70,7 +64,7 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
             try{
                 if(foregroundPermissionApproved()){
                     getLocationUpdates()
-                    bublle.Start(context)
+                    bublle.Start(context,true)
                 }else{
                     completer.set(Result.failure( workDataOf(
                         "error" to "error do caralho"
@@ -84,8 +78,6 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
             } catch (otherError: Exception) {
                 onStopped()
                 Log.d(TAG, otherError.toString()+"1")
-                completer.setCancelled()
-                completer.setException(otherError)
             }catch (otherError: CancellationException) {
                 onStopped()
                 Log.d(TAG, otherError.toString()+"vai")

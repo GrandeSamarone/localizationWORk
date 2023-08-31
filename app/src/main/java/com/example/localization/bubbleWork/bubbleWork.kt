@@ -36,11 +36,19 @@ class BubbleWork {
     private lateinit var imageViewClose:ImageView
     private  var maxClickDuration:Int = 100
     private  var  startclickTime:Long = 0
+    private var running:Boolean=false
 
-    fun Start(appcontext: Context) {
+    fun Start(appcontext: Context, runningBooble:Boolean) {
+
          context = appcontext
-        inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        loadFloatingBubble(inflater)
+        running=runningBooble
+
+        if(running){
+            inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            loadFloatingBubble(inflater)
+        }
+
+
     }
 
     private fun upBubble(event: MotionEvent): Boolean {
@@ -64,19 +72,8 @@ class BubbleWork {
 
         windowManager.updateViewLayout(floatingBubble, params)
 
-
-        if(params.y>(height*0.6)){
-            imageViewClose.setImageResource(R.drawable.cancel_orange)
-            if(params.y>(height*0.8)){
-                if (floatingBubble.isVisible){
-                    windowManager.removeView(floatingBubble)
-                    windowManager.removeView(imageViewClose)
-                }
-            }
-
-        }else{
-            imageViewClose.setImageResource(R.drawable.cancel_white)
-        }
+        /// verifica se o work ainda esta funcionando para mostrar ou nao o icon bottom
+        runIconClose()
         return true
     }
 
@@ -87,7 +84,6 @@ class BubbleWork {
         initialY = params.y
         initialTouchX = (event.rawX)
         initialTouchY = (event.rawY)
-        imageViewClose.visibility = View.VISIBLE
         return true
     }
 
@@ -95,6 +91,10 @@ class BubbleWork {
     private fun loadFloatingBubble(inflater: LayoutInflater){
 
         floatingBubble = inflater.inflate(R.layout.bubble_widget_layout,null)
+
+
+        //val gradientDrawable = floatingBubble.background.applyTheme()
+
 
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
             params = WindowManager.LayoutParams(
@@ -160,5 +160,19 @@ class BubbleWork {
     }
 
 
+private fun runIconClose(){
+    if(!running){
+        imageViewClose.visibility = View.VISIBLE
+        if(params.y>(height*0.6)){
+            imageViewClose.setImageResource(R.drawable.cancel_orange)
+            if(params.y>(height*0.8) && floatingBubble.isVisible){
+                    windowManager.removeView(floatingBubble)
+                    windowManager.removeView(imageViewClose)
+            }
 
+        }else{
+            imageViewClose.setImageResource(R.drawable.cancel_white)
+        }
+    }
+}
 }
