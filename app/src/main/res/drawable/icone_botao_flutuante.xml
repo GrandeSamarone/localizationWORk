@@ -2,11 +2,12 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
      <item android:state_checked="true" android:id="@+id/iconBubble">
         <shape android:shape="oval">
-            <solid android:color="#f9b218" />
+            <solid android:color="@color/icon_back" />
             <size
                 android:height="50dp"
                 android:width="50dp"/>
             <stroke
+                android:color="@color/icon_back"
                 android:width="2dp"
                 />
         </shape>

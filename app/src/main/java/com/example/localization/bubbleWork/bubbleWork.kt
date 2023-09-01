@@ -114,7 +114,7 @@ class BubbleWork {
             )
         }
              ///icon
-            params.gravity = Gravity.TOP or Gravity.START
+            params.gravity = Gravity.CENTER or Gravity.CENTER
             params.x = 0
             params.y = 100
 
@@ -131,10 +131,9 @@ class BubbleWork {
         windowManager.addView(floatingBubble, params)
         windowManager.addView(imageViewClose, imageparams)
 
+        //Tamanho da tela
         height=getDisplayMetrics(context).heightPixels
         width =getDisplayMetrics(context).widthPixels
-        Log.d("MYTAG",height.toString())
-        Log.d("MYTAG",width.toString())
 
 
         val bubbleView: View = floatingBubble.findViewById(R.id.bolha_layout)
@@ -163,9 +162,9 @@ class BubbleWork {
 private fun runIconClose(){
     if(!running){
         imageViewClose.visibility = View.VISIBLE
-        if(params.y>(height*0.6)){
+        if(params.y>(height*0.2)){
             imageViewClose.setImageResource(R.drawable.cancel_orange)
-            if(params.y>(height*0.8) && floatingBubble.isVisible){
+            if(params.y>(height*0.4) && floatingBubble.isVisible){
                     windowManager.removeView(floatingBubble)
                     windowManager.removeView(imageViewClose)
             }
