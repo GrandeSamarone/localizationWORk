@@ -6,17 +6,16 @@
             <size
                 android:height="50dp"
                 android:width="50dp"/>
-            <stroke
-                android:color="@color/icon_back"
-                android:width="2dp"
-                />
+<!--            <stroke-->
+<!--                android:color="@color/icon_back"-->
+<!--                android:width="2dp"-->
+<!--                />-->
         </shape>
     </item>
     <item
         android:drawable="@drawable/ic_lauch_round"
-        android:width="45dp"
-        android:height="45dp"
-
+        android:width="50dp"
+        android:height="50dp"
         android:gravity="center">
     </item>
 

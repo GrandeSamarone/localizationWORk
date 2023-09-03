@@ -57,12 +57,14 @@ class BubbleWork {
 
         val clickDuration: Long = Calendar.getInstance().timeInMillis - startclickTime
         imageViewClose.visibility = View.INVISIBLE
+       Log.d("MYTAG",clickDuration.toString())
+       Log.d("MYTAG",maxClickDuration.toString())
 
-        if (clickDuration<maxClickDuration) {
-            val intent = Intent(context, MainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        }
+//        if (clickDuration<maxClickDuration) {
+//            val intent = Intent(context, MainActivity::class.java)
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//            context.startActivity(intent)
+//        }
         return true
     }
 
@@ -136,7 +138,18 @@ class BubbleWork {
         width =getDisplayMetrics(context).widthPixels
 
 
-        val bubbleView: View = floatingBubble.findViewById(R.id.bolha_layout)
+        val bubbleView: View = floatingBubble.findViewById(R.id.bubbleFloating)
+
+        bubbleView.setOnClickListener {
+            val clickDuration: Long = Calendar.getInstance().timeInMillis - startclickTime
+        if (clickDuration<maxClickDuration) {
+            val intent = Intent(context, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+           }
+        }
+
+
         bubbleView.setOnTouchListener { view, event ->
             view.performClick()
             when (event.action) {
@@ -145,6 +158,7 @@ class BubbleWork {
                 MotionEvent.ACTION_MOVE ->  moveBubble(event)
 
                 MotionEvent.ACTION_UP   ->  upBubble(event)
+
 
                 else ->  false
             }

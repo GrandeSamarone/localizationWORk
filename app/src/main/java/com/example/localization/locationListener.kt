@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
 
 
 class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
@@ -53,36 +54,39 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     override fun onStopped() {
         Log.d(TAG, "onStopped()")
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-        bublle.Start(context,false)
+        bublle.Start(applicationContext,false)
     }
 
     override fun startWork(): ListenableFuture<Result> {
         Log.d(TAG, "startWork")
         return CallbackToFutureAdapter.getFuture { completer ->
-            Log.d(TAG, "CallbackToFutureAdapter")
-
             try{
-                if(foregroundPermissionApproved()){
-                    getLocationUpdates()
+                getLocationUpdates()
+               // throw Exception("ExecutionException")
+
                     bublle.Start(context,true)
-                }else{
-                    completer.set(Result.failure( workDataOf(
-                        "error" to "error do caralho"
-                    )))
-                }
+
             } catch (ioError: IOException) {
-                onStopped()
+               // Result.retry()
                  completer.set(Result.failure( workDataOf(
-                    "error" to ioError.localizedMessage
+                    "error" to "$ioError IOException"
                 )))
             } catch (otherError: Exception) {
-                onStopped()
-                Log.d(TAG, otherError.toString()+"1")
-            }catch (otherError: CancellationException) {
-                onStopped()
-                Log.d(TAG, otherError.toString()+"vai")
-                completer.setCancelled()
-                completer.setException(otherError)
+
+                Log.d(TAG, "Exception::::::::::$otherError")
+               // Result.retry()
+//
+//                completer.set(Result.failure( workDataOf(
+//                    "error" to "$otherError Exception1"
+//                )))
+//                onStopped()
+            }catch (otherError: ExecutionException) {
+                Log.d(TAG, "localizedMessage:::::::::")
+                Log.d(TAG, "ExecutionException::::::::${otherError.localizedMessage}")
+//                completer.set(Result.failure( workDataOf(
+//                    "error" to "$otherError ExecutionException"
+//                )))
+                Result.retry()
             }
         }
     }
@@ -142,22 +146,9 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
                 }
             })
     }
-    private fun foregroundPermissionApproved(): Boolean {
-        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    }
+
 
     private fun createForegroundInfo(): ForegroundInfo {
-//        val resultIntent = Intent(context, MainActivity::class.java)
-//        //resultIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//        resultIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-//        resultIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-//        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
-//            addNextIntentWithParentStack(resultIntent)
-//            getPendingIntent(0, PendingIntent.FLAG_MUTABLE)
-//        }
         val builder: NotificationCompat.Builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Você está online")

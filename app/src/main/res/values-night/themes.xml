@@ -2,15 +2,22 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.Localization" parent="Theme.Material3.DayNight">
                 <!-- Primary brand color. -->
-                <item name="colorPrimary">#FFDE0A</item>
-                <item name="colorPrimaryVariant">@color/sigeluLight</item>
-                <item name="colorOnPrimary">@color/sigeluLight</item>
-                <!-- Secondary brand color. -->
-                <item name="colorSecondary">@color/sigeluLight</item>
-                <item name="colorSecondaryVariant">@color/sigeluLight</item>
-                <item name="colorOnSecondary">@color/sigeluLight</item>
-                <!-- Status bar color. -->
-                <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>
+<!--                <item name="colorPrimary">#FFDE0A</item>-->
+<!--                <item name="colorPrimaryVariant">@color/sigeluLight</item>-->
+<!--                <item name="colorOnPrimary">@color/sigeluLight</item>-->
+<!--                &lt;!&ndash; Secondary brand color. &ndash;&gt;-->
+<!--                <item name="colorSecondary">@color/sigeluLight</item>-->
+<!--                <item name="colorSecondaryVariant">@color/sigeluLight</item>-->
+<!--                <item name="colorOnSecondary">@color/sigeluLight</item>-->
+<!--                &lt;!&ndash; Status bar color. &ndash;&gt;-->
+<!--                <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>-->
                 <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Localization" parent="Base.Theme.Localization" />
+
+
+    <style name="ShapeAppearanceOverlay.App.rounded" parent="">
+        <item name="cornerSize">50%</item>
     </style>
 </resources>

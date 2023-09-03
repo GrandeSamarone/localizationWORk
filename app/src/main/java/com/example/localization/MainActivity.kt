@@ -15,6 +15,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -23,6 +24,7 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.example.localization.bubbleWork.BubbleWork
 import com.example.localization.databinding.ActivityMainBinding
 import java.util.concurrent.TimeUnit
 
@@ -30,6 +32,7 @@ import java.util.concurrent.TimeUnit
 private const val TAG = "MYTAG"
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
 
+private lateinit var locationRequest: OneTimeWorkRequest
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy {
@@ -64,7 +67,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-
         createChannel()
         workManager = WorkManager.getInstance(this)
 
@@ -77,11 +79,13 @@ class MainActivity : AppCompatActivity() {
                 startForResult.launch(intent)
             } else {
                 requestMultiplePermissions.launch(
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.POST_NOTIFICATIONS,)
                 )
             }
 
         }
+
 
         binding.btLocClosed.setOnClickListener {
             workManager.cancelUniqueWork("motoboyON")
@@ -95,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             .setRequiresStorageNotLow(true)
             .build()
         try {
-            val locationRequest: OneTimeWorkRequest =
+            locationRequest =
                 OneTimeWorkRequest.Builder(WorkServiceOnline::class.java)
                     .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                     .setConstraints(constraints)
@@ -119,19 +123,28 @@ class MainActivity : AppCompatActivity() {
           observeWork(locationRequest)
 
         } catch (e: Exception) {
+            Log.i(TAG, "erro Work:::::")
             Log.i(TAG, e.toString())
            // binding.textobs.text = e.toString()
         }
     }
 
     private fun observeWork(oneTimeWorkRequest: OneTimeWorkRequest) {
+        val bublle: BubbleWork = BubbleWork()
         WorkManager.getInstance(this).getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
             .observe(this) { workInfo ->
                 if (workInfo != null) {
                     Log.i(TAG, "${workInfo.state}")
-                    if(workInfo.state==WorkInfo.State.FAILED){
-                        workManager.cancelUniqueWork("motoboyON")
-                    }
+                    Log.i(TAG, "${workInfo.outputData.getString("error")}")
+//                    if(workInfo.state==WorkInfo.State.FAILED){
+//                        binding.textobs.text = "CANCELADO APOS ERRO"
+//                        workManager.cancelUniqueWork("motoboyON")
+//                        bublle.Start(applicationContext,false)
+//                    }else if(workInfo.state==WorkInfo.State.ENQUEUED){
+//                        bublle.Start(applicationContext,true)
+//                    }else if(workInfo.state==WorkInfo.State.RUNNING){
+//                        bublle.Start(applicationContext,true)
+//                    }
                     binding.textobs.text = workInfo.state.toString()
                     binding.texterror.text = workInfo.outputData.getString("error")
                 }
@@ -149,7 +162,12 @@ class MainActivity : AppCompatActivity() {
 
         return true
     }
-
+    private fun foregroundPermissionApproved(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
     // TODO: Step 1.0, Review Permissions: Handles permission result.
     override fun onRequestPermissionsResult(
         requestCode: Int,
