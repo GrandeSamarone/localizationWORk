@@ -7,13 +7,6 @@ android:layout_width="wrap_content"
 android:layout_height="wrap_content"
     android:layout_gravity="center"
 android:id="@+id/bolha_layout">
-<!--        <ImageView-->
-<!--            android:id="@+id/bubbleFloating"-->
-<!--            android:layout_width="80dp"-->
-<!--            android:layout_height="80dp"-->
-<!--            android:src="@drawable/icone_botao_flutuante"-->
-<!--            tools:ignore="ContentDescription"/>-->
-
         <Button
             android:id="@+id/bubbleFloating"
             android:layout_width="60dp"
