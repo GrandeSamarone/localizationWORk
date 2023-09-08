@@ -39,11 +39,6 @@ import java.util.Locale
 
 class LocationWork (context: Context, params: WorkerParameters):CoroutineWorker(context,params) {
 
-    companion object {
-        const val TAG = "ForegroundWorker"
-        const val NOTIFICATION_ID = 42
-        const val CHANNEL_ID = "mobbiexpresswork"
-    }
     private lateinit var locationRequest: LocationRequest
     private lateinit  var locationCallback: LocationCallback
     private var locationListener: LocationListener? = null

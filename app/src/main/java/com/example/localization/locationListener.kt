@@ -17,8 +17,12 @@ import androidx.annotation.RequiresApi
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.impl.utils.futures.SettableFuture
 import androidx.work.workDataOf
@@ -39,32 +43,24 @@ import java.util.concurrent.ExecutionException
 class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
     : ListenableWorker(appcontext, workerParams) {
 
-    var context: Context = appcontext
-
-    companion object {
-        const val TAG = "MYTAG"
-        const val NOTIFICATION_ID = 42
-        const val CHANNEL_ID = "mobbiexpresswork"
-        var progress = "progress"
-    }
-    private var bublle: BubbleWork = BubbleWork()
+    private var context: Context = appcontext
     private lateinit  var locationCallback: LocationCallback
     private   var fusedLocationProviderClient= LocationServices.getFusedLocationProviderClient(context)
 
     override fun onStopped() {
-        Log.d(TAG, "onStopped()")
+        Log.d(TAGLOG, "onStopped()")
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-        bublle.Start(applicationContext,false)
+       // bublle.Start(context,false)
     }
 
+
     override fun startWork(): ListenableFuture<Result> {
-        Log.d(TAG, "startWork")
+
+        Log.d(TAGLOG, "startWork")
         return CallbackToFutureAdapter.getFuture { completer ->
             try{
                 getLocationUpdates()
                // throw Exception("ExecutionException")
-
-                    bublle.Start(context,true)
 
             } catch (ioError: IOException) {
                // Result.retry()
@@ -73,16 +69,17 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
                 )))
             } catch (otherError: Exception) {
 
-                Log.d(TAG, "Exception::::::::::$otherError")
-               // Result.retry()
+                Log.d(TAGLOG, "Exception::::::::::$otherError")
+                otherError.printStackTrace()
+                Result.failure()
 //
 //                completer.set(Result.failure( workDataOf(
 //                    "error" to "$otherError Exception1"
 //                )))
 //                onStopped()
             }catch (otherError: ExecutionException) {
-                Log.d(TAG, "localizedMessage:::::::::")
-                Log.d(TAG, "ExecutionException::::::::${otherError.localizedMessage}")
+                Log.d(TAGLOG, "localizedMessage:::::::::")
+                Log.d(TAGLOG, "ExecutionException::::::::${otherError.localizedMessage}")
 //                completer.set(Result.failure( workDataOf(
 //                    "error" to "$otherError ExecutionException"
 //                )))
@@ -101,8 +98,6 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
-                 //   Log.i(TAG, "LatitudeCallback ${location.latitude} + ${location.longitude}")
-                    progress="OBSERVER ${location.latitude} + ${location.longitude}"
                     Toast.makeText(context, "OBSERVER ${location.latitude} + ${location.longitude}", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -111,7 +106,6 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
-
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,8000L).apply {
             this.setGranularity(Granularity.GRANULARITY_FINE)}.build()
@@ -173,7 +167,7 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
 
     @SuppressLint("RestrictedApi")
     override fun getForegroundInfoAsync(): ListenableFuture<ForegroundInfo> {
-        Log.i(TAG, "getForegroundInfoAsync")
+        Log.i(TAGLOG, "getForegroundInfoAsync")
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             super.getForegroundInfoAsync();
         } else {
@@ -182,6 +176,4 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
             future
         }
     }
-
-
     }

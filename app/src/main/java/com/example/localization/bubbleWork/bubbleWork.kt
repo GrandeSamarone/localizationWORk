@@ -1,5 +1,6 @@
 package com.example.localization.bubbleWork
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
@@ -14,15 +15,23 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
+import androidx.activity.ComponentActivity
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.work.WorkManager
 import com.example.localization.MainActivity
+import com.example.localization.MyApplication
 import com.example.localization.R
+import com.example.localization.TAGLOG
 import java.util.Calendar
 
 
-class BubbleWork {
+class BubbleWork{
     private lateinit var windowManager: WindowManager
-    private lateinit var floatingBubble: View
+    private  var floatingBubble: View? =null
     private var initialX: Int = 0
     private var initialY: Int = 0
     private var height:Int=0
@@ -38,33 +47,20 @@ class BubbleWork {
     private  var  startclickTime:Long = 0
     private var running:Boolean=false
 
-    fun Start(appcontext: Context, runningBooble:Boolean) {
+    @Suppress("InflateParams")
+    fun start(appcontext: Context, visibleBubble:Boolean,runBubble:Boolean) {
 
+        running=runBubble
          context = appcontext
-        running=runningBooble
+         inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
-        if(running){
-            inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            loadFloatingBubble(inflater)
-        }
+          if(floatingBubble==null){
+              loadFloatingBubble()
+          }else floatingBubble?.isVisible = visibleBubble
 
 
     }
-
     private fun upBubble(event: MotionEvent): Boolean {
-        val diffPosicaoX = (event.rawX - initialTouchX).toInt()
-        val diffPosicaoY = (event.rawY - initialTouchY).toInt()
-
-        val clickDuration: Long = Calendar.getInstance().timeInMillis - startclickTime
-        imageViewClose.visibility = View.INVISIBLE
-       Log.d("MYTAG",clickDuration.toString())
-       Log.d("MYTAG",maxClickDuration.toString())
-
-//        if (clickDuration<maxClickDuration) {
-//            val intent = Intent(context, MainActivity::class.java)
-//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//            context.startActivity(intent)
-//        }
         return true
     }
 
@@ -89,14 +85,9 @@ class BubbleWork {
         return true
     }
 
-    @Suppress("InflateParams")
-    private fun loadFloatingBubble(inflater: LayoutInflater){
+    private fun loadFloatingBubble(){
 
         floatingBubble = inflater.inflate(R.layout.bubble_widget_layout,null)
-
-
-        //val gradientDrawable = floatingBubble.background.applyTheme()
-
 
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
             params = WindowManager.LayoutParams(
@@ -138,9 +129,10 @@ class BubbleWork {
         width =getDisplayMetrics(context).widthPixels
 
 
-        val bubbleView: View = floatingBubble.findViewById(R.id.bubbleFloating)
+        val bubbleView: View? = floatingBubble?.findViewById(R.id.bubbleFloating)
 
-        bubbleView.setOnClickListener {
+        //click do bubble
+        bubbleView?.setOnClickListener {
             val clickDuration: Long = Calendar.getInstance().timeInMillis - startclickTime
         if (clickDuration<maxClickDuration) {
             val intent = Intent(context, MainActivity::class.java)
@@ -150,7 +142,7 @@ class BubbleWork {
         }
 
 
-        bubbleView.setOnTouchListener { view, event ->
+        bubbleView?.setOnTouchListener { view, event ->
             view.performClick()
             when (event.action) {
                 MotionEvent.ACTION_DOWN ->  downBubble(event)
@@ -178,9 +170,10 @@ private fun runIconClose(){
         imageViewClose.visibility = View.VISIBLE
         if(params.y>(height*0.2)){
             imageViewClose.setImageResource(R.drawable.cancel_orange)
-            if(params.y>(height*0.4) && floatingBubble.isVisible){
+            if(params.y>(height*0.4) && floatingBubble?.isVisible == true){
                     windowManager.removeView(floatingBubble)
                     windowManager.removeView(imageViewClose)
+                 //   lifecycle.removeObserver(appLifecycleObserver)
             }
 
         }else{
@@ -188,4 +181,7 @@ private fun runIconClose(){
         }
     }
 }
+
+
+
 }

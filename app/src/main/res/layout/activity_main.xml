@@ -7,17 +7,19 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btLoc"
         android:text="ON"
         android:layout_width="match_parent"
-        android:layout_height="50dp"/>
+        android:layout_height="50dp"
+        android:theme="@style/Theme.MaterialComponents.DayNight"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btLoc_closed"
         android:text="OFF"
         android:layout_width="match_parent"
-        android:layout_height="50dp"/>
+        android:layout_height="50dp"
+        android:theme="@style/Theme.MaterialComponents.DayNight"/>
 
     <TextView
         android:id="@+id/textobs"

@@ -1,12 +1,12 @@
 package com.example.localization
 
 import android.Manifest
+import android.R.id
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
@@ -16,29 +16,30 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.example.localization.bubbleWork.BubbleWork
 import com.example.localization.databinding.ActivityMainBinding
 import java.util.concurrent.TimeUnit
 
 
-private const val TAG = "MYTAG"
-private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
-
 private lateinit var locationRequest: OneTimeWorkRequest
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(){
 
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
-    lateinit var workManager: WorkManager
+    private val appLifecycleObserver: MyApplication.ObserverLife = MyApplication.ObserverLife()
+    private val workManager = WorkManager.getInstance(application)
+    private val outputWorkInfos: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_MOTOBOY)
     private val requestMultiplePermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -48,28 +49,28 @@ class MainActivity : AppCompatActivity() {
             if (it.value) {
                 if (checkLocation()) {
                     startJob()
-
                 } else {
                     val intent1 = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     startForResult.launch(intent1)
-                    Log.d(TAG, "active GPS")
+                    Log.d(TAGLOG, "active GPS")
                 }
             }
         }
     }
 
-    ///ir para confirugação do GPS
-    private val startForResult =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+    private val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        lifecycle.removeObserver(appLifecycleObserver)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        createChannel()
-        workManager = WorkManager.getInstance(this)
 
+
+        createChannel()
         binding.btLoc.setOnClickListener {
             if (!Settings.canDrawOverlays(this)) {
                 val intent = Intent(
@@ -79,8 +80,10 @@ class MainActivity : AppCompatActivity() {
                 startForResult.launch(intent)
             } else {
                 requestMultiplePermissions.launch(
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.POST_NOTIFICATIONS,)
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                       // Manifest.permission.POST_NOTIFICATIONS,
+                    )
                 )
             }
 
@@ -88,7 +91,7 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.btLocClosed.setOnClickListener {
-            workManager.cancelUniqueWork("motoboyON")
+            workManager.cancelUniqueWork(TAG_MOTOBOY)
         }
 
     }
@@ -99,59 +102,49 @@ class MainActivity : AppCompatActivity() {
             .setRequiresStorageNotLow(true)
             .build()
         try {
-            locationRequest =
-                OneTimeWorkRequest.Builder(WorkServiceOnline::class.java)
+            locationRequest = OneTimeWorkRequest.Builder(WorkServiceOnline::class.java)
                     .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                     .setConstraints(constraints)
                     .setBackoffCriteria(
                         BackoffPolicy.LINEAR,
                         10,
-                        TimeUnit.SECONDS
-                    )
+                        TimeUnit.SECONDS)
+                    .addTag(TAG_MOTOBOY)
                     .build()
 
-            Log.d(TAG, "MSG MSG")
-            Log.d(TAG, locationRequest.id.toString())
+            Log.d(TAGLOG, "MSG MSG")
+            Log.d(TAGLOG, locationRequest.id.toString())
 
 
             workManager.enqueueUniqueWork(
-                "motoboyON",
+                TAG_MOTOBOY,
                 ExistingWorkPolicy.REPLACE,
                 locationRequest)
 
-
-          observeWork(locationRequest)
+            outputWorkInfos.observe(this,workInfosObserver())
+            lifecycle.addObserver(appLifecycleObserver)
+            Log.i(TAGLOG,"::::::::")
+            Log.i(TAGLOG, outputWorkInfos.observe(this, workInfosObserver()).toString())
 
         } catch (e: Exception) {
-            Log.i(TAG, "erro Work:::::")
-            Log.i(TAG, e.toString())
-           // binding.textobs.text = e.toString()
+            Log.i(TAGLOG, "erro Work:::::")
+            Log.i(TAGLOG, e.toString())
         }
     }
-
-    private fun observeWork(oneTimeWorkRequest: OneTimeWorkRequest) {
-        val bublle: BubbleWork = BubbleWork()
-        WorkManager.getInstance(this).getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
-            .observe(this) { workInfo ->
-                if (workInfo != null) {
-                    Log.i(TAG, "${workInfo.state}")
-                    Log.i(TAG, "${workInfo.outputData.getString("error")}")
-//                    if(workInfo.state==WorkInfo.State.FAILED){
-//                        binding.textobs.text = "CANCELADO APOS ERRO"
-//                        workManager.cancelUniqueWork("motoboyON")
-//                        bublle.Start(applicationContext,false)
-//                    }else if(workInfo.state==WorkInfo.State.ENQUEUED){
-//                        bublle.Start(applicationContext,true)
-//                    }else if(workInfo.state==WorkInfo.State.RUNNING){
-//                        bublle.Start(applicationContext,true)
-//                    }
-                    binding.textobs.text = workInfo.state.toString()
-                    binding.texterror.text = workInfo.outputData.getString("error")
-                }
-            }
-    }
-
-
+//    private fun workInfosObserver(): Observer<List<WorkInfo>> {
+//        return Observer { listOfWorkInfo ->
+//            if (listOfWorkInfo.isEmpty()) {
+//                return@Observer
+//            }
+//
+//            val workInfo = listOfWorkInfo[0]
+//            Log.i(TAGLOG, "${workInfo.state}")
+//            binding.textobs.text = workInfo.state.toString()
+//            binding.texterror.text = workInfo.outputData.getString("error")
+//
+//
+//        }
+//    }
 
     private fun checkLocation(): Boolean {
         val manager =
@@ -175,22 +168,17 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        Log.d(TAG, "onRequestPermissionResult")
+        Log.d(TAGLOG, "onRequestPermissionResult")
 
         when (requestCode) {
             REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE -> when {
                 grantResults.isEmpty() ->
-                    // If user interaction was interrupted, the permission request
-                    // is cancelled and you receive empty arrays.
-                    Log.d(TAG, "User interaction was cancelled.")
+                    Log.d(TAGLOG, "User interaction was cancelled.")
 
                 grantResults[0] == PackageManager.PERMISSION_GRANTED ->
-                    // Permission was granted.
-                    // foregroundOnlyLocationService?.subscribeToLocationUpdates()
-                    Log.d(TAG, "PERMISSION_GRANTED")
-
+                    Log.d(TAGLOG, "PERMISSION_GRANTED")
                 else -> {
-                    Log.d(TAG, "PERMISSION_NEGADA")
+                    Log.d(TAGLOG, "PERMISSION_NEGADA")
                 }
             }
         }
@@ -200,11 +188,11 @@ class MainActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
-                "mobbiexpresswork",
-                "ForegroundWorker",
+                CHANNEL_ID,
+                CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_DEFAULT
             )
-            serviceChannel.description = "This is channel 1";
+            serviceChannel.description = DESCRIPTION
             val notificationManager =
                 this@MainActivity.getSystemService(Context.NOTIFICATION_SERVICE) as
                         NotificationManager
