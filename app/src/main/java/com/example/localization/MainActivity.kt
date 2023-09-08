@@ -1,7 +1,6 @@
 package com.example.localization
 
 import android.Manifest
-import android.R.id
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -17,10 +16,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
-import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
@@ -67,8 +64,6 @@ class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
-
 
         createChannel()
         binding.btLoc.setOnClickListener {
@@ -123,28 +118,13 @@ class MainActivity : AppCompatActivity(){
 
             outputWorkInfos.observe(this,workInfosObserver())
             lifecycle.addObserver(appLifecycleObserver)
-            Log.i(TAGLOG,"::::::::")
-            Log.i(TAGLOG, outputWorkInfos.observe(this, workInfosObserver()).toString())
 
         } catch (e: Exception) {
             Log.i(TAGLOG, "erro Work:::::")
             Log.i(TAGLOG, e.toString())
         }
     }
-//    private fun workInfosObserver(): Observer<List<WorkInfo>> {
-//        return Observer { listOfWorkInfo ->
-//            if (listOfWorkInfo.isEmpty()) {
-//                return@Observer
-//            }
-//
-//            val workInfo = listOfWorkInfo[0]
-//            Log.i(TAGLOG, "${workInfo.state}")
-//            binding.textobs.text = workInfo.state.toString()
-//            binding.texterror.text = workInfo.outputData.getString("error")
-//
-//
-//        }
-//    }
+
 
     private fun checkLocation(): Boolean {
         val manager =
@@ -152,16 +132,15 @@ class MainActivity : AppCompatActivity(){
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             return false
         }
-
         return true
     }
+
     private fun foregroundPermissionApproved(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
-    // TODO: Step 1.0, Review Permissions: Handles permission result.
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -199,5 +178,4 @@ class MainActivity : AppCompatActivity(){
             notificationManager.createNotificationChannel(serviceChannel)
         }
     }
-
 }
