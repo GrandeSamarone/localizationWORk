@@ -3,6 +3,8 @@ package com.example.localization.bubbleWork
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.BlendMode
+import android.graphics.BlendModeColorFilter
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.PorterDuff
@@ -21,6 +23,8 @@ import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import com.example.localization.MainActivity
@@ -143,9 +147,13 @@ class BubbleWork{
         val btnBubble: Button? =floatingBubble?.findViewById(R.id.bubbleFloatingButton)
 
 
-
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            floatingBubble?.background?.colorFilter = BlendModeColorFilter(ContextCompat.getColor(context,R.color.icon_back), BlendMode.SRC_ATOP)
+//        } else {
+//            floatingBubble?.background?.setColorFilter(ContextCompat.getColor(context,android.R.color.holo_red_dark), PorterDuff.Mode.SRC_ATOP)
+//        }
         btnBubble?.setOnClickListener {
-            floatingBubble?.background?.setColorFilter(Color.parseColor("#4e1a1a"), PorterDuff.Mode.SRC_ATOP)
+            floatingBubble?.background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(ContextCompat.getColor(context,android.R.color.holo_red_dark), BlendModeCompat.SRC_ATOP)
         }
         btnBubble?.setOnTouchListener { view, event ->
             view.performClick()
