@@ -73,7 +73,7 @@ class LocationWork (context: Context, params: WorkerParameters):CoroutineWorker(
     private fun setLocationRequest() {
 
         locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,100L).apply {
+            Priority.PRIORITY_HIGH_ACCURACY,15000).apply {
             this.setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
             this.setMinUpdateDistanceMeters(1F)
         }.build()

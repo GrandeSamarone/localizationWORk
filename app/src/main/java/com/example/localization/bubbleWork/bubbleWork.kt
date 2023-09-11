@@ -102,6 +102,7 @@ class BubbleWork{
 
         floatingBubble = inflater.inflate(R.layout.bubble_widget_layout,null)
 
+
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
             params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -146,15 +147,14 @@ class BubbleWork{
 
         val btnBubble: Button? =floatingBubble?.findViewById(R.id.bubbleFloatingButton)
 
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//            floatingBubble?.background?.colorFilter = BlendModeColorFilter(ContextCompat.getColor(context,R.color.icon_back), BlendMode.SRC_ATOP)
-//        } else {
-//            floatingBubble?.background?.setColorFilter(ContextCompat.getColor(context,android.R.color.holo_red_dark), PorterDuff.Mode.SRC_ATOP)
-//        }
         btnBubble?.setOnClickListener {
-            floatingBubble?.background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(ContextCompat.getColor(context,android.R.color.holo_red_dark), BlendModeCompat.SRC_ATOP)
+            floatingBubble?.background?.colorFilter =
+                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                ContextCompat.getColor(
+                    context,android.R.color.darker_gray),
+                BlendModeCompat.SRC_ATOP)
         }
+
         btnBubble?.setOnTouchListener { view, event ->
             view.performClick()
             when (event.action) {
