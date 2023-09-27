@@ -147,13 +147,13 @@ class BubbleWork{
 
         val btnBubble: Button? =floatingBubble?.findViewById(R.id.bubbleFloatingButton)
 
-        btnBubble?.setOnClickListener {
-            floatingBubble?.background?.colorFilter =
-                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                ContextCompat.getColor(
-                    context,android.R.color.darker_gray),
-                BlendModeCompat.SRC_ATOP)
-        }
+//        btnBubble?.setOnClickListener {
+//            floatingBubble?.background?.colorFilter =
+//                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+//                ContextCompat.getColor(
+//                    context,android.R.color.darker_gray),
+//                BlendModeCompat.SRC_ATOP)
+//        }
 
         btnBubble?.setOnTouchListener { view, event ->
             view.performClick()

@@ -2,10 +2,12 @@ package com.example.localization
 
 import android.app.Application
 import android.content.Context
+import android.os.Debug
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
+import androidx.work.Configuration
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -14,7 +16,7 @@ import com.example.localization.bubbleWork.BubbleWork
 
 var running:Boolean=false
 
-class MyApplication: Application(){
+class MyApplication: Application(), Configuration.Provider{
 
     companion object {
 
@@ -25,6 +27,24 @@ class MyApplication: Application(){
         super.onCreate()
         appContext = applicationContext
     }
+
+    override fun getWorkManagerConfiguration():Configuration {
+        return if(BuildConfig.DEBUG){
+            Configuration.Builder()
+                .setMinimumLoggingLevel(Log.DEBUG)
+                .setWorkerFactory(RenameWorkFactory())
+                .setDefaultProcessName("com.example.localization:main")
+                .build()
+        }else{
+            Configuration.Builder()
+                .setMinimumLoggingLevel(Log.ERROR)
+                .setWorkerFactory(RenameWorkFactory())
+                .setDefaultProcessName("com.example.localization:main")
+                .build()
+        }
+    }
+
+
 
       class ObserverLife: DefaultLifecycleObserver {
           private var bublle: BubbleWork = BubbleWork()

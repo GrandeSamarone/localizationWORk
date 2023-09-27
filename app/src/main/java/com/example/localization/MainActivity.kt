@@ -35,8 +35,8 @@ class MainActivity : AppCompatActivity(){
         ActivityMainBinding.inflate(layoutInflater)
     }
     private val appLifecycleObserver: MyApplication.ObserverLife = MyApplication.ObserverLife()
-    private val workManager = WorkManager.getInstance(application)
-    private val outputWorkInfos: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_MOTOBOY)
+    private lateinit var workManager: WorkManager
+    private lateinit var outputWorkInfos: LiveData<List<WorkInfo>>
     private val requestMultiplePermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -64,6 +64,8 @@ class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        workManager = WorkManager.getInstance(this)
+        outputWorkInfos= workManager.getWorkInfosByTagLiveData(TAG_MOTOBOY)
 
         createChannel()
         binding.btLoc.setOnClickListener {

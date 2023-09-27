@@ -32,10 +32,14 @@ import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class LocationWork (context: Context, params: WorkerParameters):CoroutineWorker(context,params) {
 
@@ -45,24 +49,30 @@ class LocationWork (context: Context, params: WorkerParameters):CoroutineWorker(
    private   var fusedLocationProviderClient= LocationServices.getFusedLocationProviderClient(context)
 
     override suspend fun doWork(): Result {
-        setForeground(getForegroundInfo())
-        withContext(IO){
-            getLocationUpdates()
+        setForegroundAsync(getForegroundInfo())
+        val loc = runBlocking {
+            getLocation()
         }
-        try {
-                for (i in 0..50) {
-                    delay(1000)
-                    Log.i("MYTAG", "Downloading $i")
-
-                }
-                Log.i("MYTAG", "Completed ${getCurrentDateTime()}")
-                success()
-            } catch (e: Exception) {
-                Log.i("MYTAG", "Exception $e")
-               failure()
-            }
+        val latitude = loc.latitude
 
         return  success()
+    }
+    private suspend fun getLocation(): Location = suspendCoroutine { continuation ->
+        val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+        if (ActivityCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+        }
+        mFusedLocationClient.lastLocation.addOnSuccessListener {
+            continuation.resume(it)
+        }.addOnFailureListener {
+            continuation.resumeWithException(it)
+        }
     }
     private fun getLocationUpdates() {
         setLocationRequest()
@@ -177,7 +187,7 @@ class LocationWork (context: Context, params: WorkerParameters):CoroutineWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel()
         }
-        val notification = NotificationCompat.Builder(applicationContext, "notification id")
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .setAutoCancel(true)

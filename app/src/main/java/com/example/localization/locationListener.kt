@@ -1,9 +1,7 @@
 package com.example.localization
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
 import android.location.Address
@@ -15,18 +13,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.concurrent.futures.CallbackToFutureAdapter
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.impl.utils.futures.SettableFuture
-import androidx.work.workDataOf
-import com.example.localization.bubbleWork.BubbleWork
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -34,67 +25,43 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.common.util.concurrent.ListenableFuture
-import java.io.IOException
 import java.util.Locale
-import java.util.concurrent.CancellationException
-import java.util.concurrent.ExecutionException
 
 
-class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
-    : ListenableWorker(appcontext, workerParams) {
+class WorkServiceOnline(appContext: Context, workerParams: WorkerParameters)
+    : ListenableWorker(appContext, workerParams) {
 
-    private var context: Context = appcontext
+    private var context: Context = appContext
     private lateinit  var locationCallback: LocationCallback
     private   var fusedLocationProviderClient= LocationServices.getFusedLocationProviderClient(context)
 
     override fun onStopped() {
         Log.d(TAGLOG, "onStopped()")
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-       // bublle.Start(context,false)
     }
 
-
+    @SuppressLint("RestrictedApi")
     override fun startWork(): ListenableFuture<Result> {
-
+        val future = SettableFuture.create<Result>()
         Log.d(TAGLOG, "startWork")
-        return CallbackToFutureAdapter.getFuture { completer ->
-            try{
-                getLocationUpdates()
-               // throw Exception("ExecutionException")
-
-            } catch (ioError: IOException) {
-               // Result.retry()
-                 completer.set(Result.failure( workDataOf(
-                    "error" to "$ioError IOException"
-                )))
-            } catch (otherError: Exception) {
-
-                Log.d(TAGLOG, "Exception::::::::::$otherError")
-                otherError.printStackTrace()
-                Result.failure()
+        setLocationCallback(future)
+//        completer.addCancellationListener({ Log.e(TAGLOG, "addCancellationListener") }
+//        ) { runnable -> Log.e(TAGLOG, "addCancellationListener 111")
+//            fusedLocationProviderClient.removeLocationUpdates(locationCallback)}
+        return future
+//        return CallbackToFutureAdapter.getFuture { completer ->
+//            try{
+//                getLocationUpdates()
 //
-//                completer.set(Result.failure( workDataOf(
-//                    "error" to "$otherError Exception1"
-//                )))
-//                onStopped()
-            }catch (otherError: ExecutionException) {
-                Log.d(TAGLOG, "localizedMessage:::::::::")
-                Log.d(TAGLOG, "ExecutionException::::::::${otherError.localizedMessage}")
-//                completer.set(Result.failure( workDataOf(
-//                    "error" to "$otherError ExecutionException"
-//                )))
-                Result.retry()
-            }
-        }
+//            }  catch (otherError: Exception) {
+//
+//                Log.d(TAGLOG, "Exception::::::::::$otherError")
+//                completer.set(Result.retry())
+//            }
+//        }
     }
 
-    private fun getLocationUpdates() {
-        setLocationCallback()
-        startLocationUpdates()
-    }
-
-
-    private fun setLocationCallback() {
+    private fun setLocationCallback(future:SettableFuture<Result>) {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
@@ -102,12 +69,14 @@ class WorkServiceOnline(appcontext: Context, workerParams: WorkerParameters)
                 }
             }
         }
+
+        startLocationUpdates()
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,8000L).apply {
+            Priority.PRIORITY_HIGH_ACCURACY,15000L).apply {
             this.setGranularity(Granularity.GRANULARITY_FINE)}.build()
         fusedLocationProviderClient.requestLocationUpdates(
             locationRequest, locationCallback, Looper.getMainLooper())
